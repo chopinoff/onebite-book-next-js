@@ -20,11 +20,6 @@ async function AllBooks() {
     );
 }
 
-// 설정하지 않으면 기보니값 : no-store
-// Next.js v14까지는 기본 값이 force-cache였으나 많은 사람들이 불편해 해서 v15부터 바뀜
-
-// force-cache: 캐시된 데이터를 계속 불러오기 때문에 새로고침 해도 RecoBooks 변화 없음
-// 직접 확인해보개: .next/cache/fetch-cache : json 형태로 보관
 async function RecoBooks() {
     const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_SERVER_URL}/book/random`,
