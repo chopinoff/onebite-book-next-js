@@ -3,7 +3,6 @@
 import { delay } from '@/util/delay';
 import { revalidateTag } from 'next/cache';
 
-// useActionState 형식에 따라 첫번째 인수를 state로 바꾼다 (사용 안하면 그냥 언더바)
 export async function createReviewAction(_: any, formData: FormData) {
     const bookId = formData.get('bookId')?.toString();
     const content = formData.get('content')?.toString();
