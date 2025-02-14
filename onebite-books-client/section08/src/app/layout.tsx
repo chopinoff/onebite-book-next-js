@@ -38,6 +38,8 @@ export default function RootLayout({
                     <main>{children}</main>
                     <Footer />
                 </div>
+                {/* 모달을 띄울 DOM 엘리먼트 */}
+                <div id="modal-root"></div>
             </body>
         </html>
     );
