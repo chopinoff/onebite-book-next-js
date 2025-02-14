@@ -2,6 +2,7 @@ import './globals.css';
 import Link from 'next/link';
 import style from './layout.module.css';
 import { BookData } from '@/types';
+import { ReactNode } from 'react';
 
 async function Footer() {
     const response = await fetch(
@@ -25,9 +26,16 @@ async function Footer() {
 
 export default function RootLayout({
     children,
+    modal,
 }: Readonly<{
     children: React.ReactNode;
+    modal: ReactNode;
 }>) {
+    // 정리
+    // /로 접속: children은 (@with-searchbar)\page.tsx, modal은 @modal\default.tsx
+    // book/1로 접속: children은 (.)book\[id]\page.tsx가 아니라 왜 index.tsx를 유지?
+    // > 인터셉팅 라우트가 modal에 이미 존재하므로 원래는 book\[id]\page.tsx로 가야하는 걸 뺏기고 그냥 예전 페이지가 뜨는 것..? 일단 이렇게 외우자
+    // modal은 (.)book\[id]\page.tsx
     return (
         <html lang="en">
             <body>
@@ -38,7 +46,7 @@ export default function RootLayout({
                     <main>{children}</main>
                     <Footer />
                 </div>
-                {/* 모달을 띄울 DOM 엘리먼트 */}
+                {modal}
                 <div id="modal-root"></div>
             </body>
         </html>
