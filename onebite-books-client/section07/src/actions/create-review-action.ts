@@ -1,29 +1,22 @@
+// 현재 아쉬운 점: 제출한 리뷰를 보려면 새로고침 해야함
+// 바라는 것: createReveiwAction이 성공적으로 끝났을 때 ReviewList를 서버측에서 다시 렌더링해서 브라우저로 보내주는 것
+// 혹은 bookPage 자체를 재렌더링 하는 것
+// 한 마디로 페이지를 재검증하기를 원하는 것임
+// 구현?: revalidatePath
+
 'use server';
-// ** 지금처럼 서버 액션을 별도의 파일로 분리할 때는
-// use server을 최상단에 적어주는 게 좋다
+
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export async function createReviewAction(formData: FormData) {
-    // ** 이제는 컴포넌트에서 받아온 props를 사용할 수 없기 때문에 formData로 받아와야 함
     const bookId = formData.get('bookId')?.toString();
     const content = formData.get('content')?.toString();
     const author = formData.get('author')?.toString();
-    // 주의할 점: FormDataEntryValue | null라는 타입이 지정되어있음, 지금은 문자열만 다루기 때문에 FormDataEntryValue(문자열, 파일 모두 다룸)은 필요 없음.
-    // 따라서 formData에 해당 값이 있을 때는 string으로 바꿔주면 됨.
 
     if (!bookId || !content || !author) {
         return;
     }
-    // ** 이제 DB에 추가할 거임
-    // DB에 직접 접근하려면 부가적으로 해야할 일들이 많아짐 > 배보다 배꼽이 커지는.. 실습 흐름이 끊길 수 있음
-    // 가장 중요한 것은 서버 액션 응용 방법을 배우는 것이기 때문에
-    // 지금은 리뷰 API 사용하자! (Swagger 참고)
 
-    // ** 예외 처리: content나 author 없으면 보내면 안 됨
-    // 1. 서버 액션 내에서 처리
-    // 2. input 태그에서 처리 (required)
-
-    // ** 이제 API를 호출할 것임
-    // API는 항상 실패할 가능성이 있기 때문에 try-catch 필수
     try {
         const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_SERVER_URL}/review`,
@@ -33,21 +26,53 @@ export async function createReviewAction(formData: FormData) {
             }
         );
         console.log(response.status);
+        // 역할: /book/[id]/page.tsx의 Page 컴포넌트를 재렌더링
+        // 따라서 그 안의 자식 컴포넌트 모두 재렌더링 (당연히 안에 fetch 함수도 모두 재실행)
+        // 서버 액션 내부에서 이걸 사용하면 페이지 재렌더링해서 다시 나타나게 할 수 있음
+        // 주의 1: revalidatePath는 서버에서만 사용할 수 있음 (serverAction이나 server Component에서만 사용 가능)
+        // 주의 2: 해당 페이지의 모든 캐시를 무효화함(페이지 전체를 재생성하니까)
+        // 주의 3: 페이지 자체를 캐싱하는 풀라우트 캐시까지 삭제됨 (프로덕션 모드로 확인해보기)
+        // .next 폴더: generateStaticParams에 의해 1, 2, 3 페이지 만들어진 상태
+        // 1 페이지 보면 기존 리뷰들도 적혀있음
+        // 이 상태에서 새로운 리뷰를 쓰면? > 1 페이지에 반영되지 않음
+        // 풀라우트 캐시가 제거가 되었을 뿐 업데이트가 되지는 않았음(파일은 남아있지만 사실상 무효화?)
+        // 따라서 revalidatePath는 무효화하기만 할 뿐 풀라우트 캐시를 업데이트 하지는 않는다는 것을 알게 됨~
+        // 여기서 새로고침을 하게 되면?
+        // 캐시된 데이터 사용할 수 없어서 다이나믹 페이지처럼 작동
+        // 그제서야 풀라우트 캐시로서 1 페이지에 반영됨
+        // 즉 1. 재렌더링 할 때는 다이나믹 페이지로 만들어지고
+        // 2. 새로고침 했을 때는 다이나믹 페이지로 만들어진 후 원래대로 풀라우트 캐시로 저장됨
+        // 3. 다시 새로고침 했을 때는 풀라우트 캐시에 저장된 페이지를 보냄
+        // 이렇게 돌아가는 이유는? 최신 데이터를 반영하기 위해서!
+
+        // 1. 특정 주소에 해당하는 페이지만 재검증
+        revalidatePath(`/book/${bookId}`);
+        // ** 다양한 재검증 방식 살펴보기
+        // 여기서는 안 쓰지만 알아두면 쓰기 좋음
+
+        // 2. 특정 경로의 모든 동적 페이지를 재검증
+        // revalidatePath("book/[id]", "page");
+
+        // 3. 특정 레이아웃을 갖는 모든 페이지 재검증
+        // revalidatePath("/(with-searchbar)", "layout");
+
+        // 4. 모든 데이터 재검증
+        // revalidatePath("/", "layout");
+
+        // 5. 태그 기준 데이터 캐시 재검증
+        // revalidateTag("tag");
+        // 태그: fetch에 cache 옵션 중 하나
+        // BookDetail의 fetch 메서드에서
+        // { next: { tags: [`review-${bookId}`] } }로 설정한 후
+        revalidateTag(`review-${bookId}`);
+        // 해당 태그를 가진 모든 데이터 캐시 재검증
+        // 사실 이게 1번 방법보다 더 효과적일 수 있음
+        // 1번 방법은 해당 페이지의 모든 컴포넌트를 재검증함
+        // 이 방법은 재검증 하고 싶은 데이터만 재검증할 수 있어서 효과적
     } catch (err) {
         console.error(err);
         return;
     }
 
     console.log(content, author);
-    // ** 진짜 등록되었는지 확인하기
-    // 백엔드 서버에서 npx prisma studio: 현재 DB 조회할 수 있는 대시보드 나타남 (supabase)
-
-    // ** 가독성을 위해 서버액션 파일 분리하기
-
-    // 리뷰 에디터 컴포넌트를 클라이언트 컴포넌트를 만들거나
-    // 직접 API를 만들면 되는데 굳이 서버액션 사용하는 이유: 코드가 간결해서
-    // 만약 API 사용하려면? 별도의 파일 추가, 경로 추가, 예외 처리 등
-    // 간단한 기능만 필요한 경우에는 서버 액션을 사용하면 아주 좋음
-    // 서버 액션은 서버에서만 돌아가기 때문에 클라이언트인 브라우저에서는 호출만 할 수 있을 뿐 코들르 전달받지는 않음
-    // 따라서 보안상으로 민감하거나 중요한 데이터를 다룰 때도 유용할 수 있음
 }

@@ -1,5 +1,3 @@
-// style 적용을 위해 ReviewEditor 분리
-
 import style from './review-editor.module.css';
 import { createReviewAction } from '@/actions/create-review-action';
 
