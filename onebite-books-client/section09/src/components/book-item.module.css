@@ -1,25 +1,28 @@
 .container {
-  display: flex;
-  gap: 15px;
-  padding: 20px 10px;
-  border-bottom: 1px solid rgb(220, 220, 220);
+    display: flex;
+    gap: 15px;
+    padding: 20px 10px;
+    border-bottom: 1px solid rgb(220, 220, 220);
 
-  color: black;
-  text-decoration: none;
+    color: black;
+    text-decoration: none;
 }
 
 .container img {
-  width: 80px;
+    /* has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. */
+    /* 라는 에러 해결하기 위해 삽입 */
+    width: auto;
+    height: auto;
 }
 
 .title {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .subTitle {
-  word-break: keep-all;
+    word-break: keep-all;
 }
 
 .author {
-  color: gray;
+    color: gray;
 }

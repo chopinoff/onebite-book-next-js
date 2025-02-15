@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import style from './page.module.css';
-import { ReviewData } from '@/types';
+import { BookData, ReviewData } from '@/types';
 import ReviewItem from '@/components/review-item';
 import ReviewEditor from '@/components/review-editor';
 import Image from 'next/image';
@@ -68,6 +68,36 @@ async function ReviewList({ bookId }: { bookId: string }) {
             ))}
         </section>
     );
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
+
+    // 책의 정보를 담아주는 게 좋겠다 > 위에 BookDetail처럼 fetch 함수 호출
+    // 두 번 불러와도 문제 없음 > Request Memoization (하나의 페이지를 렌더링 할 때 중복 API 호출 방지)
+    const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_SERVER_URL}/book/${id}`,
+        { cache: 'force-cache' }
+    );
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    }
+
+    const book: BookData = await response.json();
+
+    return {
+        title: `${book.title} - 한입북스`,
+        description: `${book.description}`,
+        openGraph: {
+            title: `${book.title} - 한입북스`,
+            description: `${book.description}`,
+            images: [book.coverImgUrl],
+        },
+    };
 }
 
 export default function Page({ params }: { params: { id: string } }) {

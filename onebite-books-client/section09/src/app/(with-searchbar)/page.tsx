@@ -4,8 +4,23 @@ import { BookData } from '@/types';
 import { delay } from '@/util/delay';
 import { Suspense } from 'react';
 import BookListSkeleton from '@/components/skeleton/book-list-skeleton';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+// 이렇게 정해진 변수 이름으로(metadata) export 하면 자동으로 "현재 페이지의" 메타 데이터로 설정됨
+// 이렇게 설정하고 개발자 도구 Element 탭에서 head 태그 안에 meta 태그 설정 확인해보기
+
+// + favicon.ico의 위치는 public이 아니라 app이다
+export const metadata: Metadata = {
+    title: '한입북스',
+    description: '한입 북스에 등록된 도서를 만나보세요.',
+    openGraph: {
+        title: '한입북스',
+        description: '한입 북스에 등록된 도서를 만나보세요.',
+        images: ['/thumbnail.png'],
+    },
+};
 
 async function AllBooks() {
     await delay(1500);
