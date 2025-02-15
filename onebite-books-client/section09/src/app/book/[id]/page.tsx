@@ -5,8 +5,23 @@ import ReviewItem from '@/components/review-item';
 import ReviewEditor from '@/components/review-editor';
 import Image from 'next/image';
 
-export function generateStaticParams() {
-    return [{ id: '1' }, { id: '2' }, { id: '3' }];
+// 존재하는 모든 페이지를 정적으로 만들도록 변경
+export async function generateStaticParams() {
+    // 존재하는 모든 book 정보를 불러와서 id 값을 추출한 다음 return에 넘겨주기
+    const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_SERVER_URL}/book`
+    );
+
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    }
+
+    const books: BookData[] = await response.json();
+
+    return books.map((book) => {
+        return { id: book.id.toString() };
+    });
+    // 원래 return [{ id: "1" }, { id: "2" }, { id: "3" }]; 였음
 }
 
 async function BookDetail({ bookId }: { bookId: string }) {
@@ -77,8 +92,6 @@ export async function generateMetadata({
 }) {
     const { id } = await params;
 
-    // 책의 정보를 담아주는 게 좋겠다 > 위에 BookDetail처럼 fetch 함수 호출
-    // 두 번 불러와도 문제 없음 > Request Memoization (하나의 페이지를 렌더링 할 때 중복 API 호출 방지)
     const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_SERVER_URL}/book/${id}`,
         { cache: 'force-cache' }

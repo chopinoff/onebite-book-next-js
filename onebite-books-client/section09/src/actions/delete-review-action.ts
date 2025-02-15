@@ -2,6 +2,7 @@
 
 import { revalidateTag } from 'next/cache';
 
+// delay 제거
 export async function deleteReviewAction(_: any, formData: FormData) {
     const bookId = formData.get('bookId')?.toString();
     const reviewId = formData.get('reviewId')?.toString();

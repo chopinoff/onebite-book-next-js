@@ -1,11 +1,10 @@
 import BookItem from '@/components/book-item';
 import BookListSkeleton from '@/components/skeleton/book-list-skeleton';
 import { BookData } from '@/types';
-import { delay } from '@/util/delay';
 import { Suspense } from 'react';
 
+// delay 삭제
 async function SearchResult({ q }: { q: string }) {
-    await delay(1500);
     const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_SERVER_URL}/book/search?q=${q}`
     );
@@ -24,9 +23,6 @@ async function SearchResult({ q }: { q: string }) {
     );
 }
 
-// search 페이지는 동적인 값을 사용해야 함 (q)
-// 이럴 때는 generateMetadata를 사용함: 현재 페이지의 메타 데이터를 동적으로 생성하는 역할
-// Page가 받는 props를 그대로 받을 수 있음
 export async function generateMetadata({
     searchParams,
 }: {
