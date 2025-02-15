@@ -19,6 +19,9 @@ export const metadata: Metadata = {
 // export const dynamic = 'force-dynamic' 옵션 삭제
 // 위 옵션 삭제하면 Suspense도 필요 없기 때문에 삭제
 
+// + vercel에서 최적화 하기
+// Settings에서 Fucntions > Function Region > South Korea로 변경
+
 async function AllBooks() {
     const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_SERVER_URL}/book`,
